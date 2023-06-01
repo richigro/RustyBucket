@@ -1,0 +1,31 @@
+<html>
+    <body style="margin:0; overflow-y: hidden;overflow-x: hidden;">
+    <canvas id="my_canvas" style="width:100vw; height: 100vh;"></canvas>
+    <script>
+        let canvas = document.getElementById('my_canvas');
+        let gl = canvas.getContext('webgl');
+
+        // gl.canvas.width = canvas.clientWidth;
+        // gl.canvas.height = canvas.clientHeight;
+        // gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+        
+
+        // To be able to run Rust code in the browser we will need to compile Rust to WebAssembly.
+        // This Javascipt code loads our WebAssembly file and then calls our WebAssembly's main function.
+        // https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/instantiateStreaming
+        let imports = {
+            env: {
+                    js_clear_screen_to_color: function (red, green, blue, alpha) {
+                        gl.clearColor(red, green, blue, alpha);
+                        gl.clear(gl.COLOR_BUFFER_BIT);
+                    }
+            }
+        };
+        WebAssembly.instantiateStreaming(fetch('target/wasm32-unknown-unknown/debug/examples/game.wasm'), imports).then(function (result) {
+            // After promise resolves successfully it call the main function from our ./examples/game.rs file. 
+            result.instance.exports.main();
+        }).catch(function (err) { console.log('Unable to instantiate WebAssembly module from stream: ', err); });
+    </script>
+    </body>
+</html>
